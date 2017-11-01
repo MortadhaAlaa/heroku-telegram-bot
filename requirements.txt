@@ -1,3 +1,2 @@
-# List of required packages (Dependencies)
-redis python-telegram-bot
+python-telegram-bot
 
