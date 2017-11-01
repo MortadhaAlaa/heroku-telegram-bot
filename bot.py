@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import telebot
 # import some_api_lib
 # import ...
 
