@@ -6,7 +6,7 @@ import os
 # Example of your code beginning
 #           Config vars
 token = os.environ['TELEGRAM_TOKEN']
-some_api_token = os.environ['SOME_API_TOKEN']
+#some_api_token = os.environ['SOME_API_TOKEN']
 #             ...
 
 # If you use redis, install this add-on https://elements.heroku.com/addons/heroku-redis
