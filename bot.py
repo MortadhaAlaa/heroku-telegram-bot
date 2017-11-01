@@ -84,7 +84,7 @@ def show_message(bot, update):
 def error(bot, update, error):
     logging.warning('Update "%s" caused error "%s"' % (update, error))
 
-updater = Updater(token)
+updater = Updater("473285659:AAGKsTjQ5A8YiR6kt3FvireoounxWDaghJ0")
 
 dp = updater.dispatcher
 dp.add_handler(InlineQueryHandler(inline_whisper))
