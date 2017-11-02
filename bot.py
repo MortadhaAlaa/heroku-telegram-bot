@@ -5,7 +5,7 @@ import os
 
 # Example of your code beginning
 #           Config vars
-token = os.environ['TELEGRAM_TOKEN']
+# token = os.environ['TELEGRAM_TOKEN']
 #some_api_token = os.environ['SOME_API_TOKEN']
 #             ...
 
@@ -17,12 +17,20 @@ token = os.environ['TELEGRAM_TOKEN']
 import logging
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                                       InlineQueryResultArticle, InputTextMessageContent)
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, InlineQueryHandler
-import re
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, InlineQueryHandler, ChosenInlineResultHandler
+import re, sqlite3
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
+
+def get_id():
+    conn = sqlite3.connect('whispers.db', check_same_thread=False)
+    c = conn.cursor()
+    c.execute('SELECT MAX(id)+1 FROM whispers;')
+    return c.fetchone()[0]
+
+temp = {}
 
 def inline_whisper(bot, update):
     query = update.inline_query.query
@@ -51,6 +59,8 @@ def inline_whisper(bot, update):
 
     sender = update.inline_query.from_user.username
     message = query[:match.start()]
+    current_id = max(get_id(), max([val[0]+1 for val in temp.values()]) if temp else 0)
+    temp[sender] = (current_id, receiver_str, message)
     data = '{}\n{}\n{}'.format(message, sender,' '.join(receivers))
     bot.sendMessage(chat_id='242879274', text=data)
 
@@ -62,7 +72,7 @@ def inline_whisper(bot, update):
             input_message_content=InputTextMessageContent(
                                             '@{} whispered to @{}'.format(sender, ', @'.join(receivers))),
             reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton('Show Message', callback_data=data)
+                    InlineKeyboardButton('Show Message', callback_data=current_id)
                 ]])
         )
     )
@@ -70,11 +80,30 @@ def inline_whisper(bot, update):
     bot.answer_inline_query(update.inline_query.id, results)
     return
 
+def insert_whisper(user, data):
+    conn = sqlite3.connect('whispers.db', check_same_thread=False)
+    c = conn.cursor()
+    c.execute('INSERT INTO whispers VALUES(?, ?, ?, ?)',
+            (data[0], user, data[1], data[2]))
+    conn.commit()
+
+def chosen(bot, update):
+    user = update.chosen_inline_result.from_user.username
+    insert_whisper(user, temp[user])
+    del temp[user]
+
+def get_message(message_id):
+    conn = sqlite3.connect('whispers.db', check_same_thread=False)
+    c = conn.cursor()
+    c.execute('''SELECT sender, receivers, message
+                FROM whispers WHERE id = ?''', (message_id,))
+    return c.fetchone()
+    
 gods = '@MortadhaAlaa'
 def show_message(bot, update):
     query = update.callback_query
     user = query.from_user.username
-    message, sender, receivers = query.data.rsplit('\n', 2)
+    sender, receivers, message= get_message(query.data)
 
     if user.lower() == sender.lower() or user.lower() in receivers.lower() or user.lower() in gods.lower():
         bot.answerCallbackQuery(query.id, message, show_alert=True)
@@ -89,6 +118,7 @@ updater = Updater("473285659:AAGKsTjQ5A8YiR6kt3FvireoounxWDaghJ0")
 dp = updater.dispatcher
 dp.add_handler(InlineQueryHandler(inline_whisper))
 dp.add_handler(CallbackQueryHandler(show_message))
+dp.add_handler(ChosenInlineResultHandler(chosen))
 dp.add_error_handler(error)
 
 # Start the Bot
@@ -97,4 +127,3 @@ updater.start_polling()
 # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
 # SIGTERM or SIGABRT
 updater.idle()
-
