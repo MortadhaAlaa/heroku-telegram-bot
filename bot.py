@@ -58,8 +58,13 @@ def inline_whisper(bot, update):
     receivers = [r[1:] for r in receivers]
 
     from_user = update.inline_query.from_user
+<<<<<<< HEAD
+    sender = from_user.username if from_user.username else str(from_user.id)
+    has_user = bool(from_user.username)
+=======
     sender = from_user.username if from_user.username else from_user.id
     has_user = from_user.username != ''r
+>>>>>>> 61deb2a2dc6f2a9a845a4dcfa9d8e9367d4bf66c
     message = query[:match.start()]
     current_id = max(get_id(), max([val[0]+1 for val in temp.values()]) if temp else 0)
     temp[sender] = (current_id, receiver_str, message)
@@ -72,7 +77,7 @@ def inline_whisper(bot, update):
             title='Whisper to [{}]'.format(', '.join(receivers)),
             description=query[:match.start()],
             input_message_content=InputTextMessageContent(
-                                            '@{} whispered to @{}'.format(sender if has_user else '', ', @'.join(receivers))),
+                                            '{} whispered to @{}'.format('@' + sender if has_user else from_user.first_name, ', @'.join(receivers))),
             reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton('Show Message', callback_data=current_id)
                 ]])
@@ -91,6 +96,7 @@ def insert_whisper(user, data):
 
 def chosen(bot, update):
     user = update.chosen_inline_result.from_user.username
+    user = user if user != None else str(update.chosen_inline_result.from_user.id)
     insert_whisper(user, temp[user])
     del temp[user]
 
@@ -105,10 +111,10 @@ gods = '@MortadhaAlaa'
 def show_message(bot, update):
     query = update.callback_query
     user = query.from_user.username
+    user = user if user != None else str(query.from_user.id)
     sender, receivers, message= get_message(query.data)
 
-    if user.lower() == sender.lower() or user.lower() in receivers.lower() or user.lower() in gods.lower() or
-        (user == '' and query.from_user.id == sender):
+    if user.lower() == sender.lower() or user.lower() in receivers.lower() or user.lower() in gods.lower():
         bot.answerCallbackQuery(query.id, message, show_alert=True)
     else:
         bot.answerCallbackQuery(query.id, "You can't read this message", show_alert=True)
