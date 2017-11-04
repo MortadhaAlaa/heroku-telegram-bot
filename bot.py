@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
-import logging
+import os, logging
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                                       InlineQueryResultArticle, InputTextMessageContent)
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, InlineQueryHandler, ChosenInlineResultHandler
