@@ -58,7 +58,7 @@ def inline_whisper(bot, update):
     receivers = [r[1:] for r in receivers]
 
     from_user = update.inline_query.from_user
-    sender =from_user.username if from_user.username else from_user.id
+    sender = from_user.username if from_user.username else from_user.id
     has_user = from_user.username != ''r
     message = query[:match.start()]
     current_id = max(get_id(), max([val[0]+1 for val in temp.values()]) if temp else 0)
