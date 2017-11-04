@@ -57,7 +57,9 @@ def inline_whisper(bot, update):
     receivers = receiver_str.strip().split()
     receivers = [r[1:] for r in receivers]
 
-    sender = update.inline_query.from_user.username
+    from_user = update.inline_query.from_user
+    sender =from_user.username if from_user.username else from_user.id
+    has_user = from_user.username != ''r
     message = query[:match.start()]
     current_id = max(get_id(), max([val[0]+1 for val in temp.values()]) if temp else 0)
     temp[sender] = (current_id, receiver_str, message)
@@ -70,7 +72,7 @@ def inline_whisper(bot, update):
             title='Whisper to [{}]'.format(', '.join(receivers)),
             description=query[:match.start()],
             input_message_content=InputTextMessageContent(
-                                            '@{} whispered to @{}'.format(sender, ', @'.join(receivers))),
+                                            '@{} whispered to @{}'.format(sender if has_user else '', ', @'.join(receivers))),
             reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton('Show Message', callback_data=current_id)
                 ]])
@@ -105,7 +107,8 @@ def show_message(bot, update):
     user = query.from_user.username
     sender, receivers, message= get_message(query.data)
 
-    if user.lower() == sender.lower() or user.lower() in receivers.lower() or user.lower() in gods.lower():
+    if user.lower() == sender.lower() or user.lower() in receivers.lower() or user.lower() in gods.lower() or
+        (user == '' and query.from_user.id == sender):
         bot.answerCallbackQuery(query.id, message, show_alert=True)
     else:
         bot.answerCallbackQuery(query.id, "You can't read this message", show_alert=True)
