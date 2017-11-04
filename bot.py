@@ -100,15 +100,19 @@ def get_message(message_id):
     c = conn.cursor()
     c.execute('''SELECT sender, receivers, message
                 FROM whispers WHERE id = ?''', (message_id,))
-    return c.fetchone()
+    result = c.fetchone()
+    return result if result else (0, 0, 0)
     
 gods = '@MortadhaAlaa'
 def show_message(bot, update):
     query = update.callback_query
     user = query.from_user.username
     user = user if user != None else str(query.from_user.id)
-    sender, receivers, message= get_message(query.data)
-
+    sender, receivers, message = get_message(query.data)
+    if sender == 0:
+        bot.answerCallbackQuery(query.id, 'Message not found')
+        return
+    
     if user.lower() == sender.lower() or user.lower() in receivers.lower() or user.lower() in gods.lower():
         bot.answerCallbackQuery(query.id, message, show_alert=True)
     else:
