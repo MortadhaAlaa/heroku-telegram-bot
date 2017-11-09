@@ -8,6 +8,8 @@ import re, sqlite3
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
+token = os.environ['TELEGRAM_TOKEN']
+
 
 def get_id():
     conn = sqlite3.connect('whispers.db', check_same_thread=False)
@@ -106,7 +108,7 @@ def show_message(bot, update):
 def error(bot, update, error):
     logging.warning('Update "%s" caused error "%s"' % (update, error))
 
-updater = Updater("473285659:AAGKsTjQ5A8YiR6kt3FvireoounxWDaghJ0")
+updater = Updater(token)
 
 dp = updater.dispatcher
 dp.add_handler(InlineQueryHandler(inline_whisper))
