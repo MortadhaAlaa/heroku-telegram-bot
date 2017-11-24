@@ -3,17 +3,33 @@ import os, logging
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
                                       InlineQueryResultArticle, InputTextMessageContent)
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, InlineQueryHandler, ChosenInlineResultHandler
-import re, sqlite3
+import re
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 token = os.environ['TELEGRAM_TOKEN']
 
+#----------- SETUP POSTGRESQL CONNECTION
+import os
+from urllib import parse
+import psycopg2
+
+parse.uses_netloc.append("postgres")
+url = parse.urlparse(os.environ["DATABASE_URL"])
+
+conn = psycopg2.connect(
+    database=url.path[1:],
+    user=url.username,
+    password=url.password,
+    host=url.hostname,
+    port=url.port
+)
+c = conn.cursor()
+#-------------------
+
 
 def get_id():
-    conn = sqlite3.connect('whispers.db', check_same_thread=False)
-    c = conn.cursor()
     c.execute('SELECT MAX(id)+1 FROM whispers;')
     return c.fetchone()[0]
 
@@ -70,9 +86,7 @@ def inline_whisper(bot, update):
     return
 
 def insert_whisper(user, data):
-    conn = sqlite3.connect('whispers.db', check_same_thread=False)
-    c = conn.cursor()
-    c.execute('INSERT INTO whispers VALUES(?, ?, ?, ?)',
+    c.execute('INSERT INTO whispers VALUES(%s, %s, %s, %s)',
             (data[0], user, data[1], data[2]))
     conn.commit()
 
@@ -83,10 +97,8 @@ def chosen(bot, update):
     del temp[user]
 
 def get_message(message_id):
-    conn = sqlite3.connect('whispers.db', check_same_thread=False)
-    c = conn.cursor()
     c.execute('''SELECT sender, receivers, message
-                FROM whispers WHERE id = ?''', (message_id,))
+                FROM whispers WHERE id = %s''', (message_id,))
     result = c.fetchone()
     return result if result else (0, 0, 0)
     
